@@ -16,7 +16,7 @@ using Orleans.Storage;
 
 namespace Orleans.EventSourcing.EventStoreStorage
 {
-    public class EventStoreStorage : IStorageProvider
+    public class EventStoreProvider : IStorageProvider
     {
         private IEventStoreConnection Connection;
 
