@@ -20,7 +20,6 @@ namespace Orleans.EventSourcing.EventStoreStorage
     {
         private IEventStoreConnection Connection;
 
-        private const string EventTypeHeader = "EventTypeName";
         private const int WritePageSize = 500;
         private const int ReadPageSize = 500;
 
