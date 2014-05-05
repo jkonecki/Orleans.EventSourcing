@@ -82,7 +82,7 @@ namespace Orleans.EventSourcing.EventStoreStorage
                 currentSlice = await this.Connection.ReadStreamEventsForwardAsync(stream, sliceStart, sliceCount, true);
 
                 if (currentSlice.Status == SliceReadStatus.StreamNotFound)
-                    throw new StreamNotFoundException();
+                    return;
 
                 if (currentSlice.Status == SliceReadStatus.StreamDeleted)
                     throw new StreamDeletedException();
@@ -90,7 +90,10 @@ namespace Orleans.EventSourcing.EventStoreStorage
                 sliceStart = currentSlice.NextEventNumber;
 
                 foreach (var @event in currentSlice.Events)
-                    StateTransformer.ApplyEvent(@event, grainState as IAggregateState);
+                {
+                    dynamic deserialisedEvent = DeserializeEvent(@event.Event);
+                    StateTransformer.ApplyEvent(deserialisedEvent, grainState as IAggregateState);
+                }
 
             } while (!currentSlice.IsEndOfStream);
         }
@@ -151,21 +154,10 @@ namespace Orleans.EventSourcing.EventStoreStorage
 
         private static object DeserializeEvent(RecordedEvent @event)
         {
-            var metadata = DeserializeMetadata(@event.Metadata);
-            var eventTypeProperty = metadata.Property(EventTypeHeader);
+            var eventType = Type.GetType(@event.EventType);
+            Debug.Assert(eventType != null, "Couldn't load type '{0}'. Are you missing an assembly reference?", @event.EventType);
 
-            if (eventTypeProperty == null)
-                return null;
-
-            return DeserializeEvent((string)eventTypeProperty.Value, @event.Data);
-        }
-
-        private static object DeserializeEvent(string eventClrTypeName, byte[] data)
-        {
-            var eventType = Type.GetType((string)eventClrTypeName);
-            Debug.Assert(eventType != null, "Couldn't load type '{0}'. Are you missing an assembly reference?", eventClrTypeName);
-
-            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(data), eventType);
+            return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(@event.Data), eventType);
         }
 
         private static JObject DeserializeMetadata(byte[] metadata)
@@ -175,24 +167,15 @@ namespace Orleans.EventSourcing.EventStoreStorage
 
         private static EventData ToEventData(object processedEvent)
         {
-            var headers = new Dictionary<string, object>
-            {
-                { "EventClrTypeName", EventTypeHeader }
-            };
-
-            return ToEventData(Guid.NewGuid(), processedEvent, headers);
+            return ToEventData(Guid.NewGuid(), processedEvent, new Dictionary<string, object>());
         }
 
         private static EventData ToEventData(Guid eventId, object evnt, IDictionary<string, object> headers)
         {
             var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(evnt, SerializerSettings));
+            var metadata = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(headers, SerializerSettings));
 
             var eventTypeName = evnt.GetType().AssemblyQualifiedName;
-            var eventHeaders = new Dictionary<string, object>(headers);
-            eventHeaders[EventTypeHeader] = eventTypeName;
-
-            var metadata = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(eventHeaders, SerializerSettings));
-
             return new EventData(eventId, eventTypeName, true, data, metadata);
         }
 

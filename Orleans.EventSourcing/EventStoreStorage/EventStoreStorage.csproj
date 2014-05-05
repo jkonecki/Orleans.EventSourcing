@@ -51,7 +51,6 @@
   <ItemGroup>
     <Compile Include="EventStoreProvider.cs" />
     <Compile Include="Exceptions\NotAggregateStateException.cs" />
-    <Compile Include="Exceptions\StreamNotFoundException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

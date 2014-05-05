@@ -121,6 +121,15 @@ namespace Test.Interfaces
                 }
             }
             
+            public System.Threading.Tasks.Task<bool> IsMarried
+            {
+                get
+                {
+
+                return base.InvokeMethodAsync<System.Boolean>(1174613038, new object[] {}, TimeSpan.Zero , options: InvokeMethodOptions.ReadOnly);
+                }
+            }
+            
             [Orleans.CopierMethodAttribute()]
             public static object _Copier(object original)
             {
@@ -147,10 +156,10 @@ namespace Test.Interfaces
                 return base.InvokeMethodAsync<object>(-1544510960, new object[] {person}, TimeSpan.Zero );
             }
             
-            public System.Threading.Tasks.Task Marry(string newLastName)
+            public System.Threading.Tasks.Task Marry(System.Guid spouse, string newLastName)
             {
 
-                return base.InvokeMethodAsync<object>(-1327581687, new object[] {newLastName}, TimeSpan.Zero );
+                return base.InvokeMethodAsync<object>(-516276551, new object[] {spouse, newLastName}, TimeSpan.Zero );
             }
         }
     }
@@ -180,8 +189,8 @@ namespace Test.Interfaces
                             case -1544510960: 
                                 await ((IPerson)grain).Register((PersonalAttributes)arguments[0]);
                               return true;
-                            case -1327581687: 
-                                await ((IPerson)grain).Marry((String)arguments[0]);
+                            case -516276551: 
+                                await ((IPerson)grain).Marry((Guid)arguments[0], (String)arguments[1]);
                               return true;
                             case -1287040473: 
                                 return await ((IPerson)grain).FirstName;
@@ -189,6 +198,8 @@ namespace Test.Interfaces
                                 return await ((IPerson)grain).LastName;
                             case 871790933: 
                                 return await ((IPerson)grain).Gender;
+                            case 1174613038: 
+                                return await ((IPerson)grain).IsMarried;
                             case -606142484: return ((IPerson)grain).GetProperties();
                                                         default: 
                                 throw new NotImplementedException("interfaceId="+interfaceId+",methodId="+methodId);
@@ -209,7 +220,7 @@ namespace Test.Interfaces
                     {
                         case -1544510960:
                             return "Register";
-                    case -1327581687:
+                    case -516276551:
                             return "Marry";
                     case -1287040473:
                             return "get_FirstName";
@@ -217,6 +228,8 @@ namespace Test.Interfaces
                             return "get_LastName";
                     case 871790933:
                             return "get_Gender";
+                    case 1174613038:
+                            return "get_IsMarried";
                     case -606142484:
                             return "GetProperties";
                     
@@ -254,12 +267,14 @@ static public System.Threading.Tasks.Task<PersonProperties> GetProperties(this I
             public String FirstName { get; set; }
             public String LastName { get; set; }
             public GenderType Gender { get; set; }
+            public Boolean IsMarried { get; set; }
             public Dictionary<string,object> AsDictionary()
             {  
                 var retValue = new Dictionary<string,object>();
                 retValue["FirstName"] = FirstName;
                 retValue["LastName"] = LastName;
                 retValue["Gender"] = Gender;
+                retValue["IsMarried"] = IsMarried;
                 return retValue;
             }
     }

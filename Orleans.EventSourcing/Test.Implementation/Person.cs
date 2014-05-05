@@ -37,12 +37,16 @@ namespace Test.Implementation
             });
         }
 
-        Task IPerson.Marry(string newLastName)
+        Task IPerson.Marry(Guid spouseId, string newLastName)
         {
             return this.RaiseEvent(new PersonMarried
             {
+                SpouseId = spouseId
+            }, store: false) // We are not storing the first event here
+                .ContinueWith(_ => this.RaiseEvent(new PersonLastNameChanged
+            {
                 LastName = newLastName
-            });
+            })); // Both events will be persisted here
         }
 
         Task<string> IPerson.FirstName
@@ -59,6 +63,11 @@ namespace Test.Implementation
         {
             get { return Task.FromResult(State.Gender); }
         }
+
+        Task<bool> IPerson.IsMarried
+        {
+            get { return Task.FromResult(State.IsMarried); }
+        }
     }
 
     public interface IPersonState : IAggregateState
@@ -66,5 +75,6 @@ namespace Test.Implementation
         string FirstName { get; set; }
         string LastName { get; set; }
         GenderType Gender { get; set; }
+        bool IsMarried { get; set; }
     }
 }

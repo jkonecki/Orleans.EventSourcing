@@ -14,6 +14,7 @@
 //
 //*********************************************************
 using System;
+using Orleans;
 using Test.Interfaces;
 
 namespace Test.Client
@@ -36,26 +37,39 @@ namespace Test.Client
 
             Orleans.OrleansClient.Initialize("DevTestClientConfiguration.xml");
 
-            var grain = PersonFactory.GetGrain(1);
+            var maleGrain = PersonFactory.GetGrain(1);
 
             // If the name is set, we've run this code before.
-            var name = grain.FirstName.Result;
-
-            if (name == null)
+            if (maleGrain.FirstName.Result == null)
             {
-                grain.Register(new PersonalAttributes { FirstName = "John", LastName = "Doe", Gender = GenderType.Male }).ContinueWith(
-                    t => grain.Marry("Lewis"))
-                    .Wait();
-                Console.WriteLine("\n\nWe just wrote something to the persistent store. Please verify!\n\n");
+                maleGrain.Register(new PersonalAttributes { FirstName = "John", LastName = "Doe", Gender = GenderType.Male }).Wait();
+                Console.WriteLine("We just wrote something to the persistent store (Id: {0}). Please verify!", maleGrain.GetPrimaryKey());
+            }
+            else
+            {
+                Console.WriteLine("\n\nThis was found in the persistent store: {0}, {1}, {2}\n\n",
+                    maleGrain.FirstName.Result,
+                    maleGrain.LastName.Result,
+                    maleGrain.Gender.Result.ToString());
             }
 
-            grain = PersonFactory.GetGrain(1);
-            grain.Marry("Konecki").Wait();
+            var femaleGrain = PersonFactory.GetGrain(2);
 
-            Console.WriteLine("\n\nThis was found in the persistent store: {0}, {1}, {2}\n\n",
-                grain.FirstName.Result,
-                grain.LastName.Result,
-                grain.Gender.Result.ToString());
+            // If the name is set, we've run this code before.
+            if (femaleGrain.FirstName.Result == null)
+            {
+                femaleGrain.Register(new PersonalAttributes { FirstName = "Alice", LastName = "Williams", Gender = GenderType.Female }).Wait();
+                Console.WriteLine("We just wrote something to the persistent store (Id: {0}). Please verify!", femaleGrain.GetPrimaryKey());
+            }
+            else
+            {
+                Console.WriteLine("\n\nThis was found in the persistent store: {0}, {1}, {2}\n\n",
+                    femaleGrain.FirstName.Result,
+                    femaleGrain.LastName.Result,
+                    femaleGrain.Gender.Result.ToString());
+            }
+
+            femaleGrain.Marry(maleGrain.GetPrimaryKey(), maleGrain.LastName.Result);
 
             Console.WriteLine("Orleans Silo is running.\nPress Enter to terminate...");
             Console.ReadLine();
