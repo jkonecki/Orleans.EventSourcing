@@ -35,8 +35,8 @@ namespace Orleans.EventSourcing.EventStoreStorage
             this.Log = providerRuntime.GetLogger(this.GetType().FullName, Logger.LoggerType.Application);
 
             // Create EventStore connection
-            var username = config.Properties.ContainsKey("username") ? config.Properties["username"] : "admin";
-            var password = config.Properties.ContainsKey("password") ? config.Properties["password"] : "changeit";
+            var username = config.Properties.ContainsKey("Username") ? config.Properties["Username"] : "admin";
+            var password = config.Properties.ContainsKey("Password") ? config.Properties["Password"] : "changeit";
 
             var settings = ConnectionSettings.Create()
                 .KeepReconnecting().KeepRetrying()
