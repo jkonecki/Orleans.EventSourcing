@@ -1,3 +1,7 @@
+
+### Attention! The project has moved to https://github.com/OrleansContrib/orleans.eventsourcing
+
+
 Orleans.EventSourcing
 =====================
 
